@@ -16,7 +16,7 @@ import pathGen as pg
 import sys, os
 import time
 import data_Cleaner as DC
-if getattr(sys, 'frozen', False):
+if getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', None):
     # If the application is run as a bundle, the pyInstaller bootloader
     # extends the sys module by a flag frozen=True and sets the app
     # path into variable _MEIPASS'.
