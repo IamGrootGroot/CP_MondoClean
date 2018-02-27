@@ -5,7 +5,7 @@ class Operator(Thread):
 
     def __init__(self, ui, cleaner, filename, banList, dateFormat, colIndexDoublon,
                 colIndexAnonymisation, listeCheminCompil, cheminJointure, colComp1,
-                colComp2, colJoints, modeCateg, colIndexC, changes, newPath):
+                colComp2, colJoints, modeCateg, colIndexC, changes, newPath, colIndexApparition, colIndexAdditionIdentification, colIndexAdditionAssommer):
         Thread.__init__(self)
         self.ui = ui
         self.cleaner = cleaner
@@ -23,6 +23,9 @@ class Operator(Thread):
         self.colIndexC = colIndexC
         self.changes = changes
         self.newPath = newPath
+        self.colIndexApparition = colIndexApparition
+        self.colIndexAdditionIdentification = colIndexAdditionIdentification
+        self.colIndexAdditionAssommer = colIndexAdditionAssommer
         self.key = None
         self.daemon = True
 
@@ -51,6 +54,12 @@ class Operator(Thread):
             if self.modeCateg is not None:
                 self.ui.feedback('Catégorisation des données...')
                 self.cleaner.categorize(self.modeCateg, self.colIndexC, self.changes)
+            if self.colIndexApparition is not None:
+                self.ui.feedback('Calcul apparition des valeurs...')
+                self.cleaner.count(self.colIndexApparition)
+            if self.colIndexAdditionIdentification is not None:
+                self.ui.feedback('Addition des valeurs...')
+                self.cleaner.summ(self.colIndexAdditionIdentification, self.colIndexAdditionAssommer)
             self.cleaner.purify()
             self.callBackUI()
         if self.key == 'save':
@@ -58,7 +67,7 @@ class Operator(Thread):
                 self.ui.feedback('Sauvegarde en cours...')
                 self.cleaner.saveWB(1, self.newPath)
             else:
-                self.ui.feed('Sauvegarde en cours...')
+                self.ui.feedback('Sauvegarde en cours...')
                 self.cleaner.saveWB(2, self.newPath)
             self.cleaner.openWB(1, self.newPath)
             self.callBackUI()

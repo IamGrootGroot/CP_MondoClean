@@ -4,6 +4,7 @@ import os
 import csv
 import secrets
 import string
+from collections import Counter
 from datetime import datetime
 
 class Cleaner:
@@ -208,6 +209,61 @@ class Cleaner:
         except:
             print("Can't find duplicates.")
 
+    def count(self, colIndex):
+        """Counts the number of occurences of a given
+        combination of column values and write that amount in the last column"""
+        sheet = self.wb.worksheets[self.sheetN]
+        self.maxBytes = sheet.max_row*2
+        self.taskBytes = 0
+        sequences = []
+        colCount = sheet.max_column+1
+        sheet.cell(row=1, column=colCount).value = 'COUNT'
+        for k, row in enumerate(sheet.iter_rows()):
+            sequence = ''
+            if k>0:
+                for n, cell in enumerate(row):
+                    if n+1 in colIndex:
+                        sequence += str(cell.value)
+                sequences.append(sequence)
+                self.taskBytes = self.taskBytes+1
+        occurences = Counter(sequences)
+        for n, s in enumerate(sequences):
+            if s in occurences.keys():
+                sheet.cell(row=n+2, column=colCount).value = occurences.get(s)
+                self.taskBytes = self.taskBytes+1
+        self.taskBytes = 0
+
+    def summ(self, colIndex, colAdd):
+        """Sum of values @colAdd for same occurences of a given combination"""
+        sheet = self.wb.worksheets[self.sheetN]
+        self.maxBytes = sheet.max_row*2
+        self.taskBytes = 0
+        sequences = {}
+        colCount = sheet.max_column+1
+        sheet.cell(row=1, column=colCount).value = 'SUM'
+        for k, row in enumerate(sheet.iter_rows()):
+            sequence = ''
+            if k>0:
+                for n, cell in enumerate(row):
+                    if n+1 in colIndex:
+                        sequence += str(cell.value)
+                    if n+1==colAdd:
+                        val = int(cell.value)   #Has to be numerical
+                if sequence in sequences:
+                    sequences[sequence]+=val
+                else:
+                    sequences.update({sequence:val})
+            self.taskBytes = self.taskBytes+1
+        for k, row in enumerate(sheet.iter_rows()):
+            sequence = ''
+            for n, cell in enumerate(row):
+                if n+1 in colIndex:
+                    sequence += str(cell.value)
+            if sequence in sequences:
+                sheet.cell(row=k+1, column=colCount).value = sequences.get(sequence)
+            self.taskBytes = self.taskBytes+1
+        self.taskBytes = 0
+
     def joint(self, path, colComp1, colComp2, colJoints):
         """Joint opendata @path. Finds matching values between colComp1 and colComp2
         and add the data in colJoint at matching index"""
@@ -222,6 +278,11 @@ class Cleaner:
         mr = sheet.max_row
         mb = sheetB.max_row
         mc = sheet.max_column
+        heads = []
+        for row in sheetB.iter_rows(min_row=1, max_row=1):
+            for n, cell in enumerate(row):
+                if n+1 in colJoints:
+                    heads.append(str(cell.value))
         colc1 = []
         colc2 = []
         colj = []
@@ -253,6 +314,8 @@ class Cleaner:
                 sheet.cell(row=j+2, column=k+1+mc).value = idx.get(j)[k]
                 self.taskBytes = self.taskBytes+1
         self.taskBytes = 0
+        for n, s in enumerate(heads):
+            sheet.cell(row=1, column=n+1+mc).value = s
         self.purify()
 
     def categorize(self, mod, colIndexC, changes):
