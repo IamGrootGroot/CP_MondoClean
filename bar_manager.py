@@ -1,5 +1,5 @@
 from threading import Thread
-import data_Cleaner as DC #data_Cleaner as DC
+import data_cleaner as DC #data_Cleaner as DC
 import time
 
 class BarManager(Thread):

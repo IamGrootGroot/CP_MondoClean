@@ -13,11 +13,11 @@ import PIL
 from PIL import ImageTk, Image
 #import threading
 import pandas as pd
-import pathgen as pg
+import pathGen as pg
 import operateur as operateur
 import sys, os
 import time
-import data_Cleaner as DC
+import data_cleaner as DC
 import bar_manager as bm
 if getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', None):
     # If the application is run as a bundle, the pyInstaller bootloader
@@ -123,7 +123,7 @@ class MyWindow:
         self.labelTitreCadre1.place(x=390, y=0)
 
         #Image Doshas
-        self.im=Image.open(self.dirPath+"filePathGenerator/images/LogoDoshas.JPG")
+        self.im=Image.open(self.dirPath+"/filePathGenerator/images/LogoDoshas.JPG")
         self.photo=ImageTk.PhotoImage(self.im)
         self.labelDoshas=tk.Label(self.cadre4,image=self.photo, bg='white')
         self.labelDoshas.place(x=625, y=0, width=150 ,height=52)
@@ -136,21 +136,21 @@ class MyWindow:
         self.nomFichier.place(x=110 ,y=50)
 
         #Control panel (Clean/Reset/PullBack)
-        self.play=Image.open(self.dirPath+"filePathGenerator/images/play.JPG")
+        self.play=Image.open(self.dirPath+"/filePathGenerator/images/play.JPG")
         self.photoPlay=ImageTk.PhotoImage(self.play)
         self.button = tk.Button(self.cadre5,image=self.photoPlay, bg='white',command=self.clean, state='disabled')
         self.button.place(x=690, y=23, width=50, height=50)
         self.labelNettoyer = tk.Label(self.cadre5, text='Lancer le(s) traitement(s)', bg='white')
         self.labelNettoyer.place(x=630,y=73)
 
-        self.pullBack=Image.open(self.dirPath+"filePathGenerator/images/retour.JPG")
+        self.pullBack=Image.open(self.dirPath+"/filePathGenerator/images/retour.JPG")
         self.photoPullBack=ImageTk.PhotoImage(self.pullBack)
         self.buttonPullBack = tk.Button(self.cadre5,image=self.photoPullBack,command=self.undo, state='disabled')
         self.buttonPullBack.place(x=100, y=23, width=50, height=50)
         self.labelRetour = tk.Label(self.cadre5, text='Retour', bg='white')
         self.labelRetour.place(x=110,y=73)
 
-        self.reset=Image.open(self.dirPath+"filePathGenerator/images/resetV1.JPG")
+        self.reset=Image.open(self.dirPath+"/filePathGenerator/images/resetV1.JPG")
         self.photoReset=ImageTk.PhotoImage(self.reset)
         self.buttonReset = tk.Button(self.cadre5, bg='white',image=self.photoReset,command=self.resetCleaner, state='disabled')
         self.buttonReset.place(x=1200, y=23, width=50, height=50)
@@ -290,7 +290,7 @@ class MyWindow:
         self.buttonCompil.place(x=300, y=30, width=140, height=25)
         self.buttonCompil.configure(state='disabled')
 
-        self.resetCompil=Image.open(self.dirPath+"filePathGenerator/images/resetCompilV2.JPG")
+        self.resetCompil=Image.open(self.dirPath+"/filePathGenerator/images/resetCompilV2.JPG")
         self.photoResetCompil=ImageTk.PhotoImage(self.resetCompil)
         self.buttonResetCompil = tk.Button(self.cadreFichier,image=self.photoResetCompil,state='normal',text='Reset',bd='4',relief='raised', command = self.resetListCompil)
         self.buttonResetCompil.place(x=440, y=35, width=20, height=20)
