@@ -40,7 +40,7 @@ class Cleaner:
             self.wb2 = openpyxl.load_workbook(path)
 
     def anonymize(self, colIndexAN):
-        """ Anonymization function: Sets cell values of given columns to their respective row index value
+        """ Anonymization function: Sets cell values of given columns to random integer value
         if a duplicate is found, the set value is the same as the one encountered before. A second file is
         created for tracability purpose. This xlsx file contains the anonimyzation table with given values
         in column 1 and original values in column 2.
@@ -50,7 +50,6 @@ class Cleaner:
         file become a concatenation of the values for each cell.
         """
         try:
-            track = 1
             self.wba = openpyxl.Workbook()
             sheet = self.wb.worksheets[self.sheetN]
             self.maxBytes = sheet.max_row
@@ -71,9 +70,11 @@ class Cleaner:
                         self.wba.active.cell(row=self.wba.active.max_row+1, column=1).value = giv
                         self.wba.active.cell(row=self.wba.active.max_row, column=2).value = sheet.cell(row=i, column=colIndexAN[0]).value
                         sheet.cell(row=i, column=colIndexAN[0]).value = giv
+                        sheet.cell(row=i, column=colIndexAN[0]).number_format = 'General'
                         self.given.append(giv)
                     else:
                         sheet.cell(row=i, column=colIndexAN[0]).value = list(seen.keys())[list(seen.values()).index(sheet.cell(row=i, column=colIndexAN[0]).value)]
+                        sheet.cell(row=i, column=colIndexAN[0]).number_format = 'General'
                     self.taskBytes = i-1
                 colHead = {cell.value for n, cell in enumerate(list(sheet.rows)[0]) if n+1 == colIndexAN[0]}
                 print('Succesfully anonymized column', colHead,'.')
@@ -88,6 +89,7 @@ class Cleaner:
                             giv = randint(0, sheet.max_row*sheet.max_column)
                         for u in colIndexAN:
                             sheet.cell(row=i, column=u).value = giv
+                            sheet.cell(row=i, column=u).number_format = 'General'
                         seen.update({giv:sequence})
                         self.wba.active.cell(row=self.wba.active.max_row+1, column=1).value = giv
                         self.wba.active.cell(row=self.wba.active.max_row, column=2).value = sequence
@@ -95,6 +97,7 @@ class Cleaner:
                     else:
                         for u in colIndexAN:
                             sheet.cell(row=i, column=u).value = list(seen.keys())[list(seen.values()).index(sequence)]
+                            sheet.cell(row=i, column=u).number_format = 'General'
                 colIndexminus = []
                 for h in colIndexAN:
                         colIndexminus.append(h-1)
@@ -106,8 +109,7 @@ class Cleaner:
             print('Anonymization failed at row', i,'.')
 
     def purify(self):
-        """Purification function, removes banned characters given by the self.banned list,
-        also removes ',' in integers"""
+        """Purification function, removes banned characters given by the self.banned list"""
         try :
             sheet = self.wb.worksheets[self.sheetN]
             self.maxBytes = sheet.max_column*sheet.max_row
@@ -115,20 +117,43 @@ class Cleaner:
             track = 0
             for i in range(1, sheet.max_column+1):
                 for j in range(2, sheet.max_row+1):
+                    if type(sheet.cell(row=j, column=i).value) is str:
+                        sheet.cell(row=j, column=i).value = sheet.cell(row=j, column=i).value.strip()
                     if sheet.cell(row=j, column=i).value in self.banned:
-                            sheet.cell(row=j, column=i).value = ''
-                            track=track+1
-                    if "," in str(sheet.cell(row=j, column=i).value):
+                        sheet.cell(row=j, column=i).value = None
                         track=track+1
-                        sheet.cell(row=j, column=i).value = str(sheet.cell(row=j, column=i).value).replace(',','.')
-                    sheet.cell(row=j, column=i).value = str(sheet.cell(row=j, column=i).value).strip()
                     self.taskBytes=self.taskBytes+1
             self.taskBytes = 0
             print('Sheet purified, edited '+ str(track) +' cells.')
         except :
             print('Cleaning banned data failed.')
 
-    def changeDate(self, formatIn):
+    def formatNumbers(self):
+        """Manages numbers formatting"""
+        try:
+            sheet = self.wb.worksheets[self.sheetN]
+            self.maxBytes = sheet.max_column*sheet.max_row
+            self.taskBytes = 0
+            track = 0
+            for i in range(1, sheet.max_column+1):
+                for j in range(2, sheet.max_row+1):
+                    if type(self.convertFloat(str(sheet.cell(row=j, column=i).value))) is float:
+                        track=track+1
+                        sheet.cell(row=j, column=i).value = float(sheet.cell(row=j, column=i).value)
+                        sheet.cell(row=j, column=i).number_format = '0.00'
+                    elif (type(self.convertFloat(sheet.cell(row=j, column=i).value)) is not float) and ("," in str(sheet.cell(row=j, column=i).value)) and self.checkIsNumber(str(sheet.cell(row=j, column=i).value))=='number':
+                        track=track+1
+                        sheet.cell(row=j, column=i).value = float(str(sheet.cell(row=j, column=i).value).replace(',','.'))
+                        sheet.cell(row=j, column=i).number_format = '0.00'
+                    else:
+                        pass
+                    self.taskBytes=self.taskBytes+1
+            self.taskBytes = 0
+        except:
+            print('Failed while formatting numbers.')
+
+
+    def changeDate(self, formatIn): ## TODO INDEX DATE
         """Reformats dates to the 'd/m/Y' format. The input format has to be specified by formatIn"""
         try :
             sheet = self.wb.worksheets[self.sheetN]
@@ -264,7 +289,7 @@ class Cleaner:
                     if n+1 in colIndex:
                         sequence += str(cell.value)
                     if n+1==colAdd:
-                        val = int(cell.value)   #Has to be numerical
+                        val = float(cell.value)   #Has to be numerical
                 if sequence in sequences:
                     sequences[sequence]+=val
                 else:
@@ -332,7 +357,6 @@ class Cleaner:
         self.taskBytes = 0
         for n, s in enumerate(heads):
             sheet.cell(row=1, column=n+1+mc).value = s
-        self.purify()
 
     def categorize(self, mod, colIndexC, changes):
         """Catégorisation, changes cell values @column
@@ -385,19 +409,36 @@ class Cleaner:
             for n, cell in enumerate(row):
                 cell.value = str(n+1)+' '+cell.value
 
-    def timeMachine(self, request):
+    def convertFloat(self, value):
+        try:
+            return float(value)
+        except:
+            return(value)
+
+    def checkIsNumber(self, s):
+        try:
+            for i in s:
+                int(i)
+            return 'number'
+        except:
+            return 'not number'
+
+    def timeMachine(self, request, *args):
         """A time machine to allow undo and resets"""
         if request == 'pullBack':
-            del self.wbList[-1]
-            os.remove(self.pathList[-1])
-            del self.pathList[-1]
+            #del self.wbList[-1]
+            #os.remove(self.pathList[-1])####LES LIGNES QUI SUPPRIMENT
+            #del self.pathList[-1]
             self.wb = self.wbList[-1]
             return self.pathList[-1]
+        if request == 'pullBack@':
+            self.wb = self.wbList[self.pathList.index(args[0])]
+            return self.pathList[self.pathList.index(args[0])]
         if request == 'fullReset':
-            del self.wbList[1:]
-            for p in self.pathList[1:]:
-                os.remove(p)
-            del self.pathList[1:]
+            #del self.wbList[1:]
+            #for p in self.pathList[1:]: ####Suppriment aussi
+                #os.remove(p)
+            #del self.pathList[1:]
             self.wb = self.wbList[0]
             return self.pathList[0]
 

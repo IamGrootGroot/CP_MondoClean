@@ -17,7 +17,7 @@ import pathGen as pg
 import operateur as operateur
 import sys, os
 import time
-import data_cleaner as DC
+import data_cleaner as DC #data_Cleaner as DC
 import bar_manager as bm
 if getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', None):
     # If the application is run as a bundle, the pyInstaller bootloader
@@ -61,11 +61,12 @@ class MyWindow:
         self.changes = {}
         self.bytes=0
         self.maxbytes = 100
+        self.history = []
 
         self.frame = tk.Frame(self.parent, bg='white', width=1200, height=800)
         self.frame.grid()
         self.frame.grid_propagate(False)
-        self.dirPath = pg.getFilePath().replace('filePathGenerator','')
+        self.dirPath = pg.getFilePath()+'/'
 
         #Menu
         self.menubar=tk.Menu(parent)
@@ -123,7 +124,7 @@ class MyWindow:
         self.labelTitreCadre1.place(x=390, y=0)
 
         #Image Doshas
-        self.im=Image.open(self.dirPath+"/filePathGenerator/images/LogoDoshas.JPG")
+        self.im=Image.open(self.dirPath+"filePathGenerator/images/LogoDoshas.JPG")
         self.photo=ImageTk.PhotoImage(self.im)
         self.labelDoshas=tk.Label(self.cadre4,image=self.photo, bg='white')
         self.labelDoshas.place(x=625, y=0, width=150 ,height=52)
@@ -136,21 +137,21 @@ class MyWindow:
         self.nomFichier.place(x=110 ,y=50)
 
         #Control panel (Clean/Reset/PullBack)
-        self.play=Image.open(self.dirPath+"/filePathGenerator/images/play.JPG")
+        self.play=Image.open(self.dirPath+"filePathGenerator/images/play.JPG")
         self.photoPlay=ImageTk.PhotoImage(self.play)
         self.button = tk.Button(self.cadre5,image=self.photoPlay, bg='white',command=self.clean, state='disabled')
         self.button.place(x=690, y=23, width=50, height=50)
         self.labelNettoyer = tk.Label(self.cadre5, text='Lancer le(s) traitement(s)', bg='white')
         self.labelNettoyer.place(x=630,y=73)
 
-        self.pullBack=Image.open(self.dirPath+"/filePathGenerator/images/retour.JPG")
+        self.pullBack=Image.open(self.dirPath+"filePathGenerator/images/retour.JPG")
         self.photoPullBack=ImageTk.PhotoImage(self.pullBack)
         self.buttonPullBack = tk.Button(self.cadre5,image=self.photoPullBack,command=self.undo, state='disabled')
         self.buttonPullBack.place(x=100, y=23, width=50, height=50)
         self.labelRetour = tk.Label(self.cadre5, text='Retour', bg='white')
         self.labelRetour.place(x=110,y=73)
 
-        self.reset=Image.open(self.dirPath+"/filePathGenerator/images/resetV1.JPG")
+        self.reset=Image.open(self.dirPath+"filePathGenerator/images/resetV1.JPG")
         self.photoReset=ImageTk.PhotoImage(self.reset)
         self.buttonReset = tk.Button(self.cadre5, bg='white',image=self.photoReset,command=self.resetCleaner, state='disabled')
         self.buttonReset.place(x=1200, y=23, width=50, height=50)
@@ -290,7 +291,7 @@ class MyWindow:
         self.buttonCompil.place(x=300, y=30, width=140, height=25)
         self.buttonCompil.configure(state='disabled')
 
-        self.resetCompil=Image.open(self.dirPath+"/filePathGenerator/images/resetCompilV2.JPG")
+        self.resetCompil=Image.open(self.dirPath+"filePathGenerator/images/resetCompilV2.JPG")
         self.photoResetCompil=ImageTk.PhotoImage(self.resetCompil)
         self.buttonResetCompil = tk.Button(self.cadreFichier,image=self.photoResetCompil,state='normal',text='Reset',bd='4',relief='raised', command = self.resetListCompil)
         self.buttonResetCompil.place(x=440, y=35, width=20, height=20)
@@ -577,6 +578,7 @@ class MyWindow:
 
     #Charger un fichier
     def load(self, keyLoad, update, *args):
+        # -*- coding: UTF-8 -*-
         if update == False:
             name = askopenfilename(filetypes=[('Excel', ('*.xls', '*.xlsx'))])
             if name:
@@ -587,34 +589,68 @@ class MyWindow:
                     else:
                         self.feedback('Ouverture du fichier...')
                         self.df = pd.read_excel(name)
+                    self.history.append(name)
                     self.filename = name
                     self.varNomFichier.set(self.filename)
                     self.buttonChargement.place_forget()
                     self.enableCheckButtons()
                     self.display()
-                    self.menuhistory.add_command(label=name,command=lambda: self.load(0, False))
+                    self.menuhistory.add_command(label=name,command=lambda: self.load(None, 'from_MENU_NOCLEAN', name))
                     self.menuhistory.add_separator()
                 if keyLoad == 1:
                     self.listeCompilation.insert(tk.END, name)
                 if keyLoad == 2:
                     self.listeJointure.delete(0, tk.END)
                     self.listeJointure.insert(tk.END, name)
-
-        else:
-            self.feedback('Chargement du nouveau fichier...')
+        if update == 'history_MENU':
+            self.feedback('Chargement du fichier...')
             if args[0].endswith('.csv'):
                 self.df = pd.read_csv(args[0])
                 self.filename = args[0]
-                self.varNomFichier.set(self.filename)
-                self.menuhistory.add_command(label=args[0],command=lambda: self.load(0, False))
+                self.menuhistory.delete(args[0])
+                self.menuhistory.add_separator()
+                self.menuhistory.add_command(label=args[0],command=lambda: self.load(None, 'history_MENU', self.cleaner.timeMachine('pullBack@', args[0])))
                 self.menuhistory.add_separator()
             else:
                 self.df = pd.read_excel(args[0])
                 self.filename = args[0]
-                self.varNomFichier.set(self.filename)
-                self.menuhistory.add_command(label=args[0],command=lambda: self.load(0, False))
+                self.menuhistory.delete(args[0])
+                self.menuhistory.add_separator()
+                self.menuhistory.add_command(label=args[0],command=lambda: self.load(None, 'history_MENU', self.cleaner.timeMachine('pullBack@', args[0])))
                 self.menuhistory.add_separator()
             self.display()
+            self.varNomFichier.set(self.filename)
+        if update == 'history_CLEAN':
+            self.feedback('Chargement du fichier...')
+            if args[0].endswith('.csv'):
+                self.df = pd.read_csv(args[0])
+                self.filename = args[0]
+                self.menuhistory.add_command(label=args[0],command=lambda: self.load(None, 'history_MENU', self.cleaner.timeMachine('pullBack@', args[0])))
+                self.menuhistory.add_separator()
+            else:
+                self.df = pd.read_excel(args[0])
+                self.filename = args[0]
+                self.menuhistory.add_command(label=args[0],command=lambda: self.load(None, 'history_MENU', self.cleaner.timeMachine('pullBack@', args[0])))
+                self.menuhistory.add_separator()
+            self.display()
+            self.varNomFichier.set(args[0])
+        if update == 'from_MENU_NOCLEAN':
+            self.feedback('Chargement du fichier...')
+            if args[0].endswith('.csv'):
+                self.df = pd.read_csv(args[0])
+                self.filename = args[0]
+                self.menuhistory.delete(args[0])
+                self.menuhistory.add_separator()
+                self.menuhistory.add_command(label=self.filename,command=lambda: self.load(None, 'from_MENU_NOCLEAN', args[0]))
+                self.menuhistory.add_separator()
+            else:
+                self.df = pd.read_excel(args[0])
+                self.filename = args[0]
+                self.menuhistory.delete(args[0])
+                self.menuhistory.add_separator()
+                self.menuhistory.add_command(label=self.filename,command=lambda: self.load(None, 'from_MENU_NOCLEAN', args[0]))
+            self.display()
+            self.varNomFichier.set(self.filename)
 
     def enableCheckButtons(self):
         self.checkButtonCellule.configure(state='normal')
@@ -648,10 +684,10 @@ class MyWindow:
         self.changes = {}
 
     def undo(self):
-        self.load(None, True, self.cleaner.timeMachine('pullBack'))
+        self.load(None, 'history_CLEAN', self.cleaner.timeMachine('pullBack'))
 
     def resetCleaner(self):
-        self.load(None, True, self.cleaner.timeMachine('fullReset'))
+        self.load(None, 'history_MENU', self.cleaner.timeMachine('fullReset'))
 
     def resetUI(self):
         self.entryCaracteresIndesirables.delete(0,tk.END)
@@ -699,6 +735,7 @@ class MyWindow:
         self.compilationFichier.configure(fg='#B04334')
         self.jointureFichier.configure(fg='#B04334')
 
+        self.varNomFichier.set('')
         self.varDate.set(0)
         self.varCell.set(0)
         self.varDoublon.set(0)
@@ -708,7 +745,6 @@ class MyWindow:
         self.varApparition.set(0)
         self.varAddition.set(0)
         self.varCategorisation.set(0)
-        self.varNomFichier.set('')
 
 
 
@@ -730,7 +766,6 @@ class MyWindow:
             self.newPath = newName.name.replace('.csv','.xlsx')
         else:
             self.newPath = newName.name+'.xlsx'
-        print(self.newPath)
         operator = operateur.Operateur(self, self.cleaner, self.filename, self.banList, self.dateFormat,
                             self.colIndexDoublon, self.colIndexAnonymisation, self.listeCheminCompil, self.cheminJointure, self.colComp1,
                             self.colComp2, self.colJoints, self.modeCateg, self.colIndexC, self.changes, self.newPath,
