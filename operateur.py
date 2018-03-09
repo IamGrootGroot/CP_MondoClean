@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
+__author__      = "Masson Charles, Pelloux Maxence"
+__copyright__   = "Copyright 2018, Masson Charles & Pelloux Maxence"
+
 from threading import Thread
-import data_cleaner as DC
+import PFE_MondoClean.MondoClean.data_Cleaner_Module.data_cleaner as DC  #data_Cleaner as DC
 
 class Operateur(Thread):
 
@@ -33,6 +36,9 @@ class Operateur(Thread):
     def run(self):
         if self.key == 'clean':
             self.cleaner.openWB(1, self.filename)
+            if self.listeCheminCompil is not None:
+                self.ui.feedback('Compilation...')
+                self.cleaner.aggreg(self.listeCheminCompil)
             if self.banList is not None:
                 self.cleaner.param(self.banList)
             self.ui.feedback('Purification...')
@@ -42,18 +48,14 @@ class Operateur(Thread):
                 self.cleaner.changeDate(self.dateFormat)
             self.ui.feedback('Formattage des nombres...')
             self.cleaner.formatNumbers()
-            if self.colIndexDoublon is not None:
-                self.ui.feedback('Identification des doublons...')
-                self.cleaner.doublons(self.colIndexDoublon)
-            if self.colIndexAnonymisation is not None:
-                self.ui.feedback('Anonymisation des données...')
-                self.cleaner.anonymize(self.colIndexAnonymisation)
-            if self.listeCheminCompil is not None:
-                self.ui.feedback('Compilation...')
-                self.cleaner.aggreg(self.listeCheminCompil)
             if self.cheminJointure is not None:
                 self.ui.feedback('Jointure des données...')
                 self.cleaner.joint(self.cheminJointure, self.colComp1, self.colComp2, self.colJoints)
+            self.ui.feedback('Formattage des nombres...')
+            self.cleaner.formatNumbers()
+            if self.colIndexAnonymisation is not None:
+                self.ui.feedback('Anonymisation des données...')
+                self.cleaner.anonymize(self.colIndexAnonymisation)
             if self.modeCateg is not None:
                 self.ui.feedback('Catégorisation des données...')
                 self.cleaner.categorize(self.modeCateg, self.colIndexC, self.changes)
@@ -63,6 +65,10 @@ class Operateur(Thread):
             if self.colIndexAdditionIdentification is not None:
                 self.ui.feedback('Addition des valeurs...')
                 self.cleaner.summ(self.colIndexAdditionIdentification, self.colIndexAdditionAssommer)
+            if self.colIndexDoublon is not None:
+                self.ui.feedback('Identification des doublons...')
+                self.cleaner.doublons(self.colIndexDoublon)
+            self.ui.feedback('Purification...')
             self.cleaner.purify()
             self.callBackUI()
         if self.key == 'save':
