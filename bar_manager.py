@@ -1,3 +1,6 @@
+__author__      = "Masson Charles, Pelloux Maxence"
+__copyright__   = "Copyright 2018, Masson Charles & Pelloux Maxence"
+
 from threading import Thread
 import data_cleaner as DC #data_Cleaner as DC
 import time
@@ -14,4 +17,4 @@ class BarManager(Thread):
     def run(self):
         while True:
             self.ui.setBarValue(self.cleaner.getProgress())
-            time.sleep(0.1)
+            time.sleep(0.01)

@@ -12,17 +12,18 @@ except ImportError:
     # Python 3
     import tkinter as tk
     from tkinter import ttk
+    from tkinter import messagebox as mess
     from tkinter.filedialog import askopenfilename
 import PIL
 from PIL import ImageTk, Image
 #import threading
 import pandas as pd
-import PFE_UI.UI.filePathGenerator.file as pg  #pathgen as pg
-import PFE_UI.UI.operateur as operateur
+import pathgen as pg
+import operateur as operateur
 import sys, os
 import time
-import PFE_MondoClean.MondoClean.data_Cleaner_Module.data_cleaner as DC #data_Cleaner as DC
-import PFE_UI.UI.bar_manager as bm
+import data_Cleaner as DC
+import bar_manager as bm
 if getattr(sys, 'frozen', False) and getattr(sys, '_MEIPASS', None):
     # If the application is run as a bundle, the pyInstaller bootloader
     # extends the sys module by a flag frozen=True and sets the app
@@ -128,7 +129,7 @@ class MyWindow:
         self.labelTitrecadreParametres.place(x=390, y=0)
 
         #Image Doshas
-        self.im=Image.open(self.dirPath+"filePathGenerator/images/LogoDoshas.JPG")
+        self.im=Image.open(self.dirPath+"/filePathGenerator/images/LogoDoshas.JPG")
         self.photo=ImageTk.PhotoImage(self.im)
         self.labelDoshas=tk.Label(self.cadreLogo,image=self.photo, bg='white')
         self.labelDoshas.place(x=625, y=0, width=150 ,height=52)
@@ -141,21 +142,21 @@ class MyWindow:
         self.nomFichier.place(x=110 ,y=50)
 
         #Control panel (Clean/Reset/PullBack)
-        self.play=Image.open(self.dirPath+"filePathGenerator/images/play.JPG")
+        self.play=Image.open(self.dirPath+"/filePathGenerator/images/play.JPG")
         self.photoPlay=ImageTk.PhotoImage(self.play)
         self.button = tk.Button(self.cadreButton,image=self.photoPlay, bg='white',command=self.clean, state='disabled')
         self.button.place(x=690, y=23, width=50, height=50)
         self.labelNettoyer = tk.Label(self.cadreButton, text='Lancer le(s) traitement(s)', bg='white')
         self.labelNettoyer.place(x=630,y=73)
 
-        self.pullBack=Image.open(self.dirPath+"filePathGenerator/images/retour.JPG")
+        self.pullBack=Image.open(self.dirPath+"/filePathGenerator/images/retour.JPG")
         self.photoPullBack=ImageTk.PhotoImage(self.pullBack)
         self.buttonPullBack = tk.Button(self.cadreButton,image=self.photoPullBack,command=self.undo, state='disabled')
         self.buttonPullBack.place(x=100, y=23, width=50, height=50)
         self.labelRetour = tk.Label(self.cadreButton, text='Retour', bg='white')
         self.labelRetour.place(x=110,y=73)
 
-        self.reset=Image.open(self.dirPath+"filePathGenerator/images/resetV1.JPG")
+        self.reset=Image.open(self.dirPath+"/filePathGenerator/images/resetV1.JPG")
         self.photoReset=ImageTk.PhotoImage(self.reset)
         self.buttonReset = tk.Button(self.cadreButton, bg='white',image=self.photoReset,command=self.resetCleaner, state='disabled')
         self.buttonReset.place(x=1200, y=23, width=50, height=50)
@@ -295,7 +296,7 @@ class MyWindow:
         self.buttonCompil.place(x=300, y=30, width=140, height=25)
         self.buttonCompil.configure(state='disabled')
 
-        self.resetCompil=Image.open(self.dirPath+"filePathGenerator/images/resetCompilV2.JPG")
+        self.resetCompil=Image.open(self.dirPath+"/filePathGenerator/images/resetCompilV2.JPG")
         self.photoResetCompil=ImageTk.PhotoImage(self.resetCompil)
         self.buttonResetCompil = tk.Button(self.cadreFichier,image=self.photoResetCompil,state='normal',text='Reset',bd='4',relief='raised', command = self.resetListCompil)
         self.buttonResetCompil.place(x=440, y=35, width=20, height=20)
@@ -494,68 +495,73 @@ class MyWindow:
 
     #Parametres
     def getParam(self):
-        if self.varDate.get():
-            if self.listDate.curselection()[0]==0:
-                self.dateFormat='%Y%m%d'
-            if self.listDate.curselection()[0]==1:
-                self.dateFormat='%Y%d%m'
-            if self.listDate.curselection()[0]==2:
-                self.dateFormat='%m%d%Y'
-            if self.listDate.curselection()[0]==3:
-                self.dateFormat='%m%Y%d'
-            if self.listDate.curselection()[0]==4:
-                self.dateFormat='%d%m%Y'
-            if self.listDate.curselection()[0]==5:
-                self.dateFormat='%d%Y%m'
+        try:
+            if self.varDate.get():
+                if self.listDate.curselection()[0]==0:
+                    self.dateFormat='%Y%m%d'
+                if self.listDate.curselection()[0]==1:
+                    self.dateFormat='%Y%d%m'
+                if self.listDate.curselection()[0]==2:
+                    self.dateFormat='%m%d%Y'
+                if self.listDate.curselection()[0]==3:
+                    self.dateFormat='%m%Y%d'
+                if self.listDate.curselection()[0]==4:
+                    self.dateFormat='%d%m%Y'
+                if self.listDate.curselection()[0]==5:
+                    self.dateFormat='%d%Y%m'
 
-        if self.varDoublon.get():
-            entryDoublonString = self.entryDoublon.get().split(",")
-            self.colIndexDoublon = [int(s) for s in entryDoublonString]
+            if self.varDoublon.get():
+                entryDoublonString = self.entryDoublon.get().split(";")
+                self.colIndexDoublon = [int(s) for s in entryDoublonString]
 
-        if self.varAnonymisation.get():
-            entryAnonymisationString= self.entryAnonymisation.get().split(",")
-            self.colIndexAnonymisation= [int(s) for s in entryAnonymisationString]
+            if self.varAnonymisation.get():
+                entryAnonymisationString= self.entryAnonymisation.get().split(";")
+                self.colIndexAnonymisation= [int(s) for s in entryAnonymisationString]
 
-        if self.varApparition.get():
-            entryApparitionString = self.entryApparition.get().split(",")
-            self.colIndexApparition = [int(s) for s in entryApparitionString]
+            if self.varApparition.get():
+                entryApparitionString = self.entryApparition.get().split(";")
+                self.colIndexApparition = [int(s) for s in entryApparitionString]
 
-        if self.varAddition.get():
-            entryAdditionIdentificationString = self.entryAdditionIdentification.get().split(",")
-            self.colIndexAdditionIdentification = [int(s) for s in entryAdditionIdentificationString]
-            entryAdditionAssommerString = self.entryAdditionAssommer.get()
-            self.colIndexAdditionAssommer = int(entryAdditionAssommerString)
+            if self.varAddition.get():
+                entryAdditionIdentificationString = self.entryAdditionIdentification.get().split(";")
+                self.colIndexAdditionIdentification = [int(s) for s in entryAdditionIdentificationString]
+                entryAdditionAssommerString = self.entryAdditionAssommer.get()
+                self.colIndexAdditionAssommer = int(entryAdditionAssommerString)
 
-        if self.varCell.get():
-            self.banList= self.entryCaracteresIndesirables.get().split(",")
+            if self.varCell.get():
+                self.banList = self.entryCaracteresIndesirables.get().split(";")
 
-        if self.varCompilation.get():
-            self.listeCheminCompil = []
-            for i in range(self.listeCompilation.size()):
-                self.listeCheminCompil.append(self.listeCompilation.get(i))
+            if self.varCompilation.get():
+                self.listeCheminCompil = []
+                for i in range(self.listeCompilation.size()):
+                    self.listeCheminCompil.append(self.listeCompilation.get(i))
 
-        if self.varJointure.get():
-            self.cheminJointure = self.listeJointure.get(0)
-            self.colComp1 = int(self.entryJointureFichier1.get())
-            self.colComp2 = int(self.entryJointureFichier2.get())
-            entryJoinFichier3 = self.entryJointureFichier3.get().split(",")
-            self.colJoints = [int(s) for s in entryJoinFichier3]
+            if self.varJointure.get():
+                self.cheminJointure = self.listeJointure.get(0)
+                self.colComp1 = int(self.entryJointureFichier1.get())
+                self.colComp2 = int(self.entryJointureFichier2.get())
+                entryJoinFichier3 = self.entryJointureFichier3.get().split(";")
+                self.colJoints = [int(s) for s in entryJoinFichier3]
 
-        if self.varCategorisation.get():
-            self.colIndexC = int(self.entryColonneCategorisation.get())
-            entryCategorisationKeyString = self.entryEntreeCategorisation.get().split(",")
-            entryCategorisationValueString = self.entrySortieCategorisation.get().split(",")
-            if self.listModeCategorisation.curselection()[0]==0:
-                self.modeCateg='numerical'
-            if self.listModeCategorisation.curselection()[0]==1:
-                self.modeCateg='substitute'
-            if self.modeCateg == 'substitute':
-                for i in range(len(entryCategorisationValueString)):
-                    self.changes.update({entryCategorisationKeyString[i]:entryCategorisationValueString[i]})
-            else:
-                for i in range(len(entryCategorisationValueString)):
-                    self.changes.update({tuple(entryCategorisationKeyString[i].split(":")):entryCategorisationValueString[i]})
-            print(self.changes)
+            if self.varCategorisation.get():
+                self.colIndexC = int(self.entryColonneCategorisation.get())
+                entryCategorisationKeyString = self.entryEntreeCategorisation.get().split(";")
+                entryCategorisationValueString = self.entrySortieCategorisation.get().split(";")
+                if self.listModeCategorisation.curselection()[0]==0:
+                    self.modeCateg='numerical'
+                if self.listModeCategorisation.curselection()[0]==1:
+                    self.modeCateg='substitute'
+                if self.modeCateg == 'substitute':
+                    for i in range(len(entryCategorisationValueString)):
+                        self.changes.update({entryCategorisationKeyString[i]:entryCategorisationValueString[i]})
+                else:
+                    for i in range(len(entryCategorisationValueString)):
+                        self.changes.update({tuple(entryCategorisationKeyString[i].split(":")):entryCategorisationValueString[i]})
+            return ''
+        except ValueError:
+            return ValueError("Error while processing column indexes, please make sure to provide an integer index.")
+        except:
+            return Exception("Unexpected error: " + str(sys.exc_info()[0]) + str(sys.exc_info()[1]))
 
     #Nettoyer
     def clean(self):
@@ -565,15 +571,19 @@ class MyWindow:
             barManager.start()
         else:
             pass
-        self.getParam()
-        self.feedback('Initialisation des traitements..')
-        operator = operateur.Operateur(self, self.cleaner, self.filename, self.banList, self.dateFormat,
-                            self.colIndexDoublon, self.colIndexAnonymisation, self.listeCheminCompil, self.cheminJointure, self.colComp1,
-                            self.colComp2, self.colJoints, self.modeCateg, self.colIndexC, self.changes, self.newPath, self.colIndexApparition,
-                            self.colIndexAdditionIdentification, self.colIndexAdditionAssommer)
-        operator.setMod('clean')
-        operator.start()
-
+        p = self.getParam()
+        if p == '':
+            operator = operateur.Operateur(self, self.cleaner, self.filename, self.banList, self.dateFormat,
+                                self.colIndexDoublon, self.colIndexAnonymisation, self.listeCheminCompil, self.cheminJointure, self.colComp1,
+                                self.colComp2, self.colJoints, self.modeCateg, self.colIndexC, self.changes, self.newPath, self.colIndexApparition,
+                                self.colIndexAdditionIdentification, self.colIndexAdditionAssommer)
+            operator.setMod('clean')
+            operator.start()
+        else:
+            self.pop(str(p))
+            self.resetUI()
+            self.resetParam()
+            self.load(None, 'cancel', self.filename)
 
 
     #Charger un fichier
@@ -644,6 +654,10 @@ class MyWindow:
             self.menuhistory.add_command(label=self.filename,command=lambda: self.load(None, 'from_MENU_NOCLEAN', args[0]))
             self.display()
             self.varNomFichier.set(self.filename)
+        if update == 'cancel':
+            self.display()
+            self.varNomFichier.set(args[0])
+            self.filename = args[0]
 
     def enableCheckButtons(self, key):
         if key == 'unlock':
@@ -683,7 +697,7 @@ class MyWindow:
         self.colIndexApparition = None
         self.colIndexAdditionIdentification = None
         self.colIndexAdditionAssommer = None
-        self.banList= None
+        self.banList = None
         self.listeCheminCompil= None
         self.cheminJointure = None
         self.colComp1 = None
@@ -784,7 +798,9 @@ class MyWindow:
             operator.start()
         except:
             self.resetUI()
-            self.load(None, 'history_CLEAN', self.filename)
+            self.resetParam()
+            self.cleaner.timeMachine('pullBack@', self.filename)
+            self.load(None, 'cancel', self.filename)
 
     #Effacer l'affichage
     def clear(self):
@@ -795,11 +811,13 @@ class MyWindow:
         self.parent.update_idletasks()
 
     def feedback(self, text):
-        self.text.delete('1.0',tk.END)
-        self.text.insert('end', text)
+        self.text.insert('end', text + '\n')
 
     def resetListCompil(self):
         self.listeCompilation.delete(0, tk.END)
+
+    def pop(self, info):
+        mess.showerror(title='Erreur', message=info)
 
 # --- main ---
 
